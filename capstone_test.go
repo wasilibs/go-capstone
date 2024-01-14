@@ -43,11 +43,11 @@ func TestAMD64(t *testing.T) {
 		op  []byte
 	}{
 		{
-			asm: "mov byte ptr [r8 + 1], sil",
+			asm: "got movb %sil, 1(%r8)",
 			op:  []byte{0x41, 0x88, 0x70, 0x1},
 		},
 		{
-			asm: "mov byte ptr [r8 + 0x4db], 0x9c",
+			asm: "movb $0x9c, 0x4db(%r8)",
 			op:  []byte{0x41, 0xc6, 0x80, 0xdb, 0x4, 0x0, 0x0, 0x9c},
 		},
 	}

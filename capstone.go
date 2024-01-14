@@ -136,6 +136,37 @@ const (
 	MODE_TRICORE_162           Mode = 1 << 7 ///< Tricore 1.6.2
 )
 
+type OptType uint16
+
+const (
+	OPT_INVALID          OptType = iota ///< No option specified
+	OPT_SYNTAX                          ///< Assembly output syntax
+	OPT_DETAIL                          ///< Break down instruction structure into details
+	OPT_MODE                            ///< Change engine's mode at run-time
+	OPT_MEM                             ///< User-defined dynamic memory related functions
+	OPT_SKIPDATA                        ///< Skip data when disassembling. Then engine is in SKIPDATA mode.
+	OPT_SKIPDATA_SETUP                  ///< Setup user-defined function for SKIPDATA option
+	OPT_MNEMONIC                        ///< Customize instruction mnemonic
+	OPT_UNSIGNED                        ///< print immediate operands in unsigned form
+	OPT_NO_BRANCH_OFFSET                ///< ARM, prints branch immediates without offset.
+)
+
+type OptValue uint16
+
+const (
+	OPT_OFF                 OptValue = 0      ///< Turn OFF an option - default for OPT_DETAIL, OPT_SKIPDATA, OPT_UNSIGNED.
+	OPT_ON                  OptValue = 1 << 0 ///< Turn ON an option (OPT_DETAIL, OPT_SKIPDATA).
+	OPT_SYNTAX_DEFAULT      OptValue = 1 << 1 ///< Default asm syntax (OPT_SYNTAX).
+	OPT_SYNTAX_INTEL        OptValue = 1 << 2 ///< X86 Intel asm syntax - default on X86 (OPT_SYNTAX).
+	OPT_SYNTAX_ATT          OptValue = 1 << 3 ///< X86 ATT asm syntax (OPT_SYNTAX).
+	OPT_SYNTAX_NOREGNAME    OptValue = 1 << 4 ///< Prints register name with only number (OPT_SYNTAX)
+	OPT_SYNTAX_MASM         OptValue = 1 << 5 ///< X86 Intel Masm syntax (OPT_SYNTAX).
+	OPT_SYNTAX_MOTOROLA     OptValue = 1 << 6 ///< MOS65XX use $ as hex prefix
+	OPT_SYNTAX_CS_REG_ALIAS OptValue = 1 << 7 ///< Prints common register alias which are not defined in LLVM (ARM: r9 = sb etc.)
+	OPT_SYNTAX_PERCENT      OptValue = 1 << 8 ///< Prints the % in front of PPC registers.
+	OPT_DETAIL_REAL         OptValue = 1 << 1 ///< If enabled, always sets the real instruction detail. Even if the instruction is an alias.
+)
+
 func NewCapstone(arch Arch, mode Mode) *Capstone {
 	ctx := context.Background()
 	mod, err := wasmRT.InstantiateModule(ctx, wasmCompiled, wazero.NewModuleConfig().
@@ -162,6 +193,9 @@ func NewCapstone(arch Arch, mode Mode) *Capstone {
 	if !ok {
 		panic("failed to read csh")
 	}
+
+	csOption := newLazyFunction(mod, "cs_option")
+	csOption.Call3(ctx, uint64(csh), uint64(OPT_SYNTAX), uint64(OPT_SYNTAX_ATT))
 
 	return &Capstone{csh: uint64(csh), abi: &abi{
 		mod:             mod,
