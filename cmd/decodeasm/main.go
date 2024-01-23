@@ -54,9 +54,11 @@ func main() {
 	cp := capstone.NewCapstone(arch, mode)
 	defer cp.Close()
 	res := cp.Decode(opcode)
-	if len(res) != 1 {
-		fmt.Fprintf(flag.CommandLine.Output(), "expected 1 instruction, got %d\n", len(res))
+	if len(res) == 0 {
+		fmt.Fprintf(flag.CommandLine.Output(), "expected at least 1 instruction, got %d\n", len(res))
 		os.Exit(1)
 	}
-	fmt.Println(res[0])
+	for _, d := range res {
+		fmt.Println(d)
+	}
 }
